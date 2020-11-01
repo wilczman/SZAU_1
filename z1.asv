@@ -1,30 +1,29 @@
 clear;
-% Sta³e
+%% Sta³e
 C1 = 0.55;
 C2 = 0.75;
 alfa1 = 21;
 alfa2 = 21;
-% I
+%% I
 F1in = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
-F1 = 98.5; %dop³yw wody do zbiornika 
+F1 = 100.5; %dop³yw wody do zbiornika 
 Fd = 14.2; %dop³yw zak³ócaj¹cy
 % F2 = 0; %dop³yw do drugiego zbiornika = wyp³yw z pierwszego
 
 % dV1dt = F1 + Fd - alfa1*(V1/C1)^(1/4);
 % dV2dt = alfa1*(V1/C1)^(1/4) - alfa2*(V2/C2)^(1/6);
 
-h=1;  %ustawienie kroku
+h=0.01;  %ustawienie kroku
 time=0; %pocz¹tek przedzia³u%
 t=1;
-warpoczv1=100; %warunki pocz¹tkowe
-warpoczv2=100;
+warpoczv1=0; %warunki pocz¹tkowe
+warpoczv2=0;
 V1(1)=warpoczv1;
 V2(1)=warpoczv2;
-while time<30 %wykonuj na przedziale [0,15]
-%     if time>15
-%         F1 = 0;
-%         Fd = 0;
-%     end
+while time<300 %wykonuj na przedziale [0,15]
+    if time>150:
+        F1 = 0;
+        Fd = 0;
     k11=dv1dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2); %obliczanie wspó³czynników k dla obu zmiennych 
     k12=dv2dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2);
     k21=dv1dt(V1(t)+0.5*h*k11,V2(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2);
