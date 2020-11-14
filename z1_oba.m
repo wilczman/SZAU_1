@@ -4,7 +4,9 @@ C1 = 0.55;
 C2 = 0.75;
 alfa1 = 21;
 alfa2 = 21;
-timespan = 3000;
+v1zero = C1*28.8^2;
+v2zero = C2*28.63^3;
+timespan = 4000;
 tau = 50;
 % C1 = 0.5;
 % C2 = 0.4;
@@ -24,8 +26,8 @@ Fd = 14.2; %dop³yw zak³ócaj¹cy
 h=1;  %ustawienie kroku
 % starttime=1; %pocz¹tek przedzia³u%
 t=tau;
-warpoczv1=0; %warunki pocz¹tkowe
-warpoczv2=0;
+warpoczv1=C1*26.3^2; %warunki pocz¹tkowe
+warpoczv2=C2*26.3^3;
 V1(1:timespan)=warpoczv1;
 V2(1:timespan)=warpoczv2;
 while t<timespan %wykonuj na przedziale [0,15]
@@ -41,6 +43,23 @@ while t<timespan %wykonuj na przedziale [0,15]
     V2(t+1)=V2(t)+1/6*h*(k12+2*k22+2*k32+k42);    
     t=t+h;
 end
+t=tau;
+V1lin(1:timespan)=warpoczv1;
+V2lin(1:timespan)=warpoczv2;
+while t<timespan %wykonuj na przedziale [0,15]
+    k11=lin_dv1dt(V1lin(t),V2lin(t),F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero); %obliczanie wspó³czynników k dla obu zmiennych 
+    k12=lin_dv2dt(V1lin(t),V2lin(t),F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k21=lin_dv1dt(V1lin(t)+0.5*h*k11,V2lin(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k22=lin_dv2dt(V1lin(t)+0.5*h*k11,V2lin(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k31=lin_dv1dt(V1lin(t)+0.5*h*k21,V2lin(t)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k32=lin_dv2dt(V1lin(t)+0.5*h*k21,V2lin(t)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k41=lin_dv1dt(V1lin(t)+h*k31,V2lin(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    k42=lin_dv2dt(V1lin(t)+h*k31,V2lin(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero);
+    V1lin(t+1)=V1lin(t)+1/6*h*(k11+2*k21+2*k31+k41); % wyznaczanie kolejnych wartoœci x1,y1
+    V2lin(t+1)=V2lin(t)+1/6*h*(k12+2*k22+2*k32+k42);    
+    t=t+h;
+end
+
 %rysowanie wykresu i liczenie œrednich b³êdów
 plot(V1);
 hold on
@@ -48,6 +67,13 @@ plot(V2);
 legend('V1','V2');
 
 figure;
-plot(nthroot(V2/C2, 3));
+plot(nthroot(V2lin/C2, 3));
 hold on
-% plot(nthroot(V1/C1, 2))
+plot(nthroot(V2/C2, 3));
+legend('V2lin','V2');
+
+figure;
+plot(nthroot(V1lin/C1, 2))
+hold on
+plot(nthroot(V1/C1, 2));
+legend('V1lin','V1');
