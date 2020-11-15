@@ -4,7 +4,7 @@ C1 = 0.55;
 C2 = 0.75;
 alfa1 = 21;
 alfa2 = 21;
-timespan = 30000;
+timespan = 3000;
 tau = 50;
 % C1 = 0.5;
 % C2 = 0.4;
@@ -12,8 +12,8 @@ tau = 50;
 % alfa2 = 24;
 % I
 F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
-F1 = 30.5; %dop³yw wody do zbiornika 
-Fd = 34.2; %dop³yw zak³ócaj¹cy
+F1 = 98.5; %dop³yw wody do zbiornika 
+Fd = 14.2; %dop³yw zak³ócaj¹cy
 % F1 = 125; %dop³yw wody do zbiornika 
 % Fd = 11; %dop³yw zak³ócaj¹cy
 % F2 = 0; %dop³yw do drugiego zbiornika = wyp³yw z pierwszego
@@ -50,4 +50,7 @@ legend('V1','V2');
 figure;
 plot(nthroot(V2/C2, 3));
 hold on
-plot(nthroot(V1/C1, 2))
+plot(nthroot(V1/C1, 2));
+legend('h2','h1');
+ylabel('wysokoœæ s³upa wody [cm]');
+xlabel('czas symulacji [s]');
