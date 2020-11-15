@@ -4,30 +4,24 @@ C1 = 0.55;
 C2 = 0.75;
 alfa1 = 21;
 alfa2 = 21;
-h1zero = 0;
-h2zero = 0;
+h1zero = 28.63;
+h2zero = 28.63;
 h1lin = 28.63;
 h2lin = 28.63;
 timespan = 3000;
 tau = 50;
-% C1 = 0.5;
-% C2 = 0.4;
-% alfa1 = 18;
-% alfa2 = 24;
 % I
+Fd = 0; %dop³yw zak³ócaj¹cy
 F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
-F1 = 98.50; %dop³yw wody do zbiornika 
-Fd = 14.2; %dop³yw zak³ócaj¹cy
+F1ster(1:2000) = 0; %dop³yw wody do zbiornika 
+F1ster(2000:timespan) = 98.5;
 % F1 = 125; %dop³yw wody do zbiornika 
 % Fd = 11; %dop³yw zak³ócaj¹cy
 % F2 = 0; %dop³yw do drugiego zbiornika = wyp³yw z pierwszego
 
-% dV1dt = F1 + Fd - alfa1*(V1/C1)^(1/4);
-% dV2dt = alfa1*(V1/C1)^(1/4) - alfa2*(V2/C2)^(1/6);
-
 h=1;  %ustawienie kroku
 % starttime=1; %pocz¹tek przedzia³u%
-t=tau;
+t=tau+1;
 warpoczv1=C1*h1zero^2; %warunki pocz¹tkowe
 warpoczv2=C2*h2zero^3;
 V1(1:timespan)=warpoczv1;
@@ -35,6 +29,7 @@ V2(1:timespan)=warpoczv2;
 
 %% Liczenie modelu
 while t<timespan %wykonuj na przedziale [0,15]
+    F1 = F1ster(t-tau);
     k11=dv1dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2); %obliczanie wspó³czynników k dla obu zmiennych 
     k12=dv2dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2);
     k21=dv1dt(V1(t)+0.5*h*k11,V2(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2);
@@ -43,14 +38,21 @@ while t<timespan %wykonuj na przedziale [0,15]
     k32=dv2dt(V1(t)+0.5*h*k21,V2(t)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2);
     k41=dv1dt(V1(t)+h*k31,V2(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2);
     k42=dv2dt(V1(t)+h*k31,V2(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2);
-    V1(t+1)=V1(t)+1/6*h*(k11+2*k21+2*k31+k41); % wyznaczanie kolejnych wartoœci x1,y1
-    V2(t+1)=V2(t)+1/6*h*(k12+2*k22+2*k32+k42);    
+    V1(t+1)=V1(t)+1/6*h*(k11+2*k21+2*k31+k41);
+    if V1(t+1)<0
+        V1(t+1) = 0;
+    end
+    V2(t+1)=V2(t)+1/6*h*(k12+2*k22+2*k32+k42);   
+    if V2(t+1)<0
+        V2(t+1) = 0;
+    end    
     t=t+h;
 end
-t=tau;
+t=tau+1;
 V1lin(1:timespan)=warpoczv1;
 V2lin(1:timespan)=warpoczv2;
 while t<timespan %wykonuj na przedziale [0,15]
+    F1 = F1ster(t-tau);
     k11=lin_dv1dt(V1lin(t),V2lin(t),F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin); %obliczanie wspó³czynników k dla obu zmiennych 
     k12=lin_dv2dt(V1lin(t),V2lin(t),F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
     k21=lin_dv1dt(V1lin(t)+0.5*h*k11,V2lin(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
@@ -59,8 +61,14 @@ while t<timespan %wykonuj na przedziale [0,15]
     k32=lin_dv2dt(V1lin(t)+0.5*h*k21,V2lin(t)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
     k41=lin_dv1dt(V1lin(t)+h*k31,V2lin(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
     k42=lin_dv2dt(V1lin(t)+h*k31,V2lin(t)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    V1lin(t+1)=V1lin(t)+1/6*h*(k11+2*k21+2*k31+k41); % wyznaczanie kolejnych wartoœci x1,y1
-    V2lin(t+1)=V2lin(t)+1/6*h*(k12+2*k22+2*k32+k42);    
+    V1lin(t+1)=V1lin(t)+1/6*h*(k11+2*k21+2*k31+k41);
+    if V1lin(t+1)<0
+        V1lin(t+1) = 0;
+    end
+    V2lin(t+1)=V2lin(t)+1/6*h*(k12+2*k22+2*k32+k42);   
+    if V2lin(t+1)<0
+        V2lin(t+1) = 0;
+    end   
     t=t+h;
 end
 

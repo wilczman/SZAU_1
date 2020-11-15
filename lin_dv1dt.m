@@ -5,17 +5,14 @@ function [outputArg1] = lin_dv1dt(V1,V2,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin)
     end
   
     a =  F1 + Fd;
-    if F1 + Fd < 0
-        a = 0;
-    end
+%     if F1 + Fd < 0
+%         a = 0;
+%     end
     b = alfa1*(h1lin^(1/2)+1/(2*h1lin^(1/2))*(h1-h1lin));
-    if b < 0
-        b = 0;
-    end
+%     if b < 0
+%         b = 0;
+%     end
     outputArg1 = a - b;
-    if a - b <0
-        outputArg1 = 0;
-    end
 end
 
 % function [outputArg1] = lin_dv1dt(V1,V2,F1,Fd,alfa1,alfa2,C1,C2,v1zero,v2zero)
