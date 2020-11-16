@@ -8,13 +8,13 @@ h1zero = 28.63;
 h2zero = 28.63;
 h1lin = 28.63;
 h2lin = 28.63;
-timespan = 3000;
+timespan = 10000;
 tau = 50;
 % I
-Fd = 0; %dop³yw zak³ócaj¹cy
+Fd = 14.2; %dop³yw zak³ócaj¹cy
 F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
-F1ster(1:2000) = 0; %dop³yw wody do zbiornika 
-F1ster(2000:timespan) = 98.5;
+F1ster(1:2000) = 98.5; %dop³yw wody do zbiornika 
+F1ster(2000:timespan) = 98.5 + 5 ;
 % F1 = 125; %dop³yw wody do zbiornika 
 % Fd = 11; %dop³yw zak³ócaj¹cy
 % F2 = 0; %dop³yw do drugiego zbiornika = wyp³yw z pierwszego
