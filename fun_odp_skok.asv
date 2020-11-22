@@ -10,14 +10,15 @@ timespan = 10000;
 tau = 50;
 % I
 Fd = 14.2; %dop³yw zak³ócaj¹cy
-
-h1_0=h2_0;
+F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
+h1_0=h2_0
 F2=alfa1*h1_0^(1/2);
-F1ster(1:1998) = F2-Fd; %dop³yw wody do zbiornika
-F1ster(1999:timespan) = F2-Fd + delta_u;
+F1ster
+F1ster(1:1998) = F2; %dop³yw wody do zbiornika
+F1ster(1999:timespan) = h2_0 + delta_u;
 t=tau+1;
-warpoczv1=C1*h1_0^2; %warunki pocz¹tkowe
-warpoczv2=C2*h2_0^3;
+warpoczv1=C1*h1zero^2; %warunki pocz¹tkowe
+warpoczv2=C2*h2zero^3;
 V1(1:timespan)=warpoczv1;
 V2(1:timespan)=warpoczv2;
 

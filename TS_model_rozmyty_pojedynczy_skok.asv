@@ -2,7 +2,7 @@ clear all; close all;
 %% Sta³e
 load('parameters.mat');
 timespan = 10000;
-liczba_regulatorow=5;
+liczba_regulatorow=4;
 % I
 Fd = 14.2; %dop³yw zak³ócaj¹cy
 

@@ -2,8 +2,8 @@ clear all
 
 %%%%%%%    inicjalizacja    %%%%%%
 load('parameters.mat')
-liczba_regulatorow = 3; %iloœæ rozmytych
-timespan=10000;
+liczba_regulatorow = 4; %iloœæ rozmytych
+timespan=15000;
 F1ster(1:timespan) = 98.5;
 Fd = 14.2;
 %[h2_pocz, h2_koniec] - zakres w jakim dziala model rozmyty
@@ -28,7 +28,7 @@ params_DMC{5} = [ params; params ;params;params; params ];
 
 %%%%%%%%Punkt Pracy%%%%%%%%
 Upp=98.5;
-Ypp=0%h2lin;
+Ypp=h1lin;
 
 %%%%%%%%%Ograniczenia%%%%%%%
 %u_min=-1-Upp;
@@ -36,7 +36,7 @@ Ypp=0%h2lin;
 
 
 %%%%%%%%%-----Parametry DMC------%%%%%%%
- lambda=[5,5,5,5,5]; %parametr lambda np. 1
+ lambda=[1,1,1,1,1]; %parametr lambda np. 1
 % D=[50,50,50,50,50]; %horyzont dynamiki (D)
 % N=[50,50,50,50,50];%horyzont predykcji (N)
 % Nu=[30,30,30,30,30]; %horyzont sterowania (Nu)(ilosc przyszlych przyrostow wartosci sterowania)
@@ -57,16 +57,16 @@ for nr=1:liczba_regulatorow
 
 end
 
-Y = zeros(1,timespan) + h2lin;
-y = zeros(1,timespan)+ h2lin;
 
-%Y(1:51)=Ypp;
+y=zeros(1, timespan);
+Y=zeros(1, timespan); 
+Y(1:12)=Ypp;
 U=zeros(1, timespan);  
 U(:)=Upp;
 e=zeros(1, timespan);
 u_final=zeros(1,timespan);
 
-yzad=zeros(1, timespan)+28.63;
+yzad=zeros(1, timespan);
 
 yzad(round(1*timespan/7):round(2*timespan/7))=26;
 yzad(round(2*timespan/7):round(3*timespan/7))=29;
@@ -107,7 +107,7 @@ end
 for t=tau+2:timespan-max(N) 
     %symulacja obiektu i regulatora
     [V1roz(t), V2roz(t)] = object(t-1,h,V1roz,V2roz,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2);
-    Y(t) = nthroot(V2roz(t)/C2, 3);%(V2roz(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;
+    Y(t) = nthroot(V2lin(t)/C2, 3);%(V2roz(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;
     y(t)=Y(t)-Ypp;
     e(t)=yzad(t)-y(t);
     
@@ -135,7 +135,7 @@ for t=tau+2:timespan-max(N)
     
     %%%%%%%------ROZMYCIE------%%%%%%%%
     for nr = 1:liczba_regulatorow
-        w(nr) = gaussmf(y(t), [gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
+        w(nr) = gaussmf(Y(t), [gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
     end
     
     %œrednia wa¿ona z f.przynale¿noœci

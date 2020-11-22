@@ -1,6 +1,6 @@
 clear all;
 
-liczba_regulatorow = 5;
+liczba_regulatorow = 2;
 %zakres wysokosci
 h2_pocz=15;
 h2_koniec=45;
