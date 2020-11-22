@@ -13,7 +13,7 @@ function [V1lin_out, V2lin_out] = objectLin(t, h,V1lin,V2lin,F1,Fd,alfa1,alfa2,C
         V1lin_out = 0;
     end
     V2lin_out=V2lin(t)+1/6*h*(k12+2*k22+2*k32+k42);   
-    if V2lin_out<0
-        V2lin_out = 0;
-    end   
+%     if V2lin_out<0
+%         V2lin_out = 0;
+%     end   
 end

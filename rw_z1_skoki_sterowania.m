@@ -26,7 +26,7 @@ V2(1:timespan)=warpoczv2;
 V1lin(1:timespan)=warpoczv1;
 V2lin(1:timespan)=warpoczv2;
 
-skok = 9;
+skok = 10;
 delta_u = [skok*3, skok*2, skok*1, 0, -skok*1, -skok*2, -skok*3];
 h2_out = zeros(timespan,length(delta_u));
 h2lin_out = zeros(timespan,length(delta_u));
@@ -60,7 +60,7 @@ legend
 
 for i=1:length(delta_u)
     F1ster(200:timespan)=F1zero + delta_u(i);
-   
+    d_u=delta_u(i);
     V1lin(1:timespan)=warpoczv1;
     V2lin(1:timespan)=warpoczv2;
     

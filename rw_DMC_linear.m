@@ -12,13 +12,13 @@ timespan = 10000;
 tau = 50;
 
 %% I
-Fd = 0%14.2; %dop³yw zak³ócaj¹cy
+Fd = 14.2; %dop³yw zak³ócaj¹cy
 F1ster(1:4000) = 98.5; %dop³yw wody do zbiornika
 h=1;  %ustawienie kroku
 t=tau+1;
 % starttime=1; %pocz¹tek przedzia³u%
-warpoczv1=C1*h1zero^2; %warunki pocz¹tkowe
-warpoczv2=C2*h2zero^3;
+warpoczv1=C1*h1lin^2; %warunki pocz¹tkowe
+warpoczv2=C2*h2lin^3;
 V1lin(1:timespan)=warpoczv1;
 V2lin(1:timespan)=warpoczv2;
 
@@ -28,14 +28,14 @@ load('rw_odp_skok.mat','s')
 final_odp_skok=s;
 D=5000; N=200; Nu=50;lambda = 1;delta_u_max = 200;u_max = 200; u_min = 0;
 Upp=98.5;
-Ypp=0;
+Ypp=0;%24;
 kk = timespan;
 %%%%%%deklaracja wektorów sygna³ów oraz b³êdów%%%%%%
 U=zeros(1, kk);
 u=zeros(kk);
 % U(:)=Upp;
-Y = zeros(1,kk) + h2zero;
-y = zeros(1,kk)+ h2zero;
+Y = zeros(1,kk) + h2lin;
+y = zeros(1,kk)+ h2lin;
 % Y(1:tau)=Ypp;
 yzad=zeros(1, kk);
 yzad(1:kk)= 29;
@@ -46,9 +46,9 @@ e = zeros(1, kk);%yzad-Y;
 % yzad(round(4*kk/5):round(5*kk/5))=2.4;
 % yzad=yzad-Ypp;
 
-yzad(1:4000) = h2zero;
-yzad(4000:7000) = h2zero+5;
-yzad(7000:10000) = h2zero-3;
+yzad(1:4000) = h2lin;
+yzad(4000:7000) = h2lin+5;
+yzad(7000:10000) = h2lin-3;
 
 Mp=zeros(N,D-1);        %macierz ma wymiary Nx(D-1)
 for i=1:D-1 %wypelnianie macierzy Mp
@@ -69,13 +69,13 @@ deltaUP(1:D-1,1)=0;
 deltaU=0;
 
 %%%%%%%%% Algorytm DMC %%%%%%%%%
-for t=tau+1:kk-N %symulacja obiektu i regulatora
+for t=tau+2:kk-N %symulacja obiektu i regulatora
     
     %###########
-    F1 = F1ster(t-tau);
-    [V1lin(1+t), V2lin(1+t)] = objectLin(t,h,V1lin,V2lin,F1ster(t-tau),Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
+    %F1 = F1ster(t-tau);
+    [V1lin(t), V2lin(t)] = objectLin(t-1,h,V1lin,V2lin,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
     %############
-    Y(t) = nthroot(V2lin(t)/C2, 3);
+    Y(t) = (V2lin(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;%nthroot(V2lin(t)/C2, 3);
     
     y(t)=Y(t)-Ypp;
     e(t)=yzad(t)-y(t);
@@ -107,7 +107,7 @@ end
 figure;title('wykres F1ster');hold on
 plot(F1ster(1:timespan-N));hold off
 figure;title('wykres Y');hold on;
-plot(Y(1:timespan-N));plot(yzad(1:timespan-N));legend('Y','yzad');ylim([0,40]);hold off;
+plot(Y(1:timespan-N)-Ypp);plot(yzad(1:timespan-N));legend('Y','yzad');ylim([0,40]);hold off;
 
 % %% II
 % F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca

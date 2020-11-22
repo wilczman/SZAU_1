@@ -13,8 +13,8 @@ tau = 50;
 % I
 Fd = 14.2; %dop³yw zak³ócaj¹cy
 F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
-F1ster(1:4000) = 98.5; %dop³yw wody do zbiornika
-delta_u = 10;
+F1ster(1:4000) = 98.5 + 50; %dop³yw wody do zbiornika
+delta_u = 20;
 F1ster(4000:timespan) = 98.5 + delta_u ;
 % F1 = 125; %dop³yw wody do zbiornika 
 % Fd = 11; %dop³yw zak³ócaj¹cy

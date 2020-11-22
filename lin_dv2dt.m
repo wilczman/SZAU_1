@@ -1,12 +1,12 @@
 function [outputArg1] = lin_dv2dt(V1,V2,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin)
-    h1 = (V1/C1-h1lin^2)/(2*h1lin)+h1lin;
-    if h1 <0
-        h1 = 0;
-    end
-    h2 = (V2/C2-h2lin^3)/(3*h2lin^2)+h2lin;
-    if h2 <0
-        h2 = 0;
-    end
+     h1 = (V1/C1-h1lin^2)/(2*h1lin)+h1lin;
+%     if h1 <0
+%         h1 = 0;
+%     end
+     h2 = (V2/C2-h2lin^3)/(3*h2lin^2)+h2lin;
+%     if h2 <0
+%         h2 = 0;
+%     end
   
     a = alfa1*(h1lin^(1/2)+1/(2*h1lin^(1/2))*(h1-h1lin));
 %     if a < 0

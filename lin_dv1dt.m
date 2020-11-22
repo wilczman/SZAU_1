@@ -1,8 +1,8 @@
 function [outputArg1] = lin_dv1dt(V1,V2,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin)
-    h1 = (V1/C1-h1lin^2)/(2*h1lin)+h1lin;
-    if h1 <0
-        h1 = 0;
-    end
+     h1 = (V1/C1-h1lin^2)/(2*h1lin)+h1lin;
+%     if h1 <0
+%         h1 = 0;
+%     end
   
     a =  F1 + Fd;
 %     if F1 + Fd < 0
