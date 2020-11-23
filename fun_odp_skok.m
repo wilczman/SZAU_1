@@ -1,20 +1,25 @@
-function s = fun_odp_skok(h2_0,delta_u)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+function s = fun_odp_skok(h2_0,delta_u,objectType, h2_lin,D)
+%objectType - string 'liniowy', 'nieliniowy'
 load('parameters.mat')
-%Dlugosc symulacji
-kk=10000;
-
-
-timespan = 10000;
 tau = 50;
-% I
 Fd = 14.2; %dop³yw zak³ócaj¹cy
+%Dlugosc symulacji
+step_time = 2000;
+timespan = step_time+D;
+
 
 h1_0=h2_0;
-F2=alfa1*h1_0^(1/2);
-F1ster(1:1998) = F2-Fd; %dop³yw wody do zbiornika
-F1ster(1999:timespan) = F2-Fd + delta_u;
+if strcmp(objectType,'nieliniowy')
+    F2=alfa1*h1_0^(1/2);
+elseif strcmp(objectType,'liniowy')
+    h1_lin=h2_lin;
+    F2=alfa1*(h1_lin^(1/2)+1/(2*h1_lin^(1/2))*(h1_0-h1_lin));
+    %F2=alfa1*h1_0^(1/2);
+end
+
+F1ster(1:step_time-2) = F2-Fd; %dop³yw wody do zbiornika
+F1ster(step_time-1:timespan) = F2-Fd + delta_u;
+
 t=tau+1;
 warpoczv1=C1*h1_0^2; %warunki pocz¹tkowe
 warpoczv2=C2*h2_0^3;
@@ -24,9 +29,14 @@ V2(1:timespan)=warpoczv2;
 
 %% Liczenie modelu
 while t<timespan %wykonuj na przedziale [0,15]
-    [V1(1+t), V2(1+t)] = object(t,h,V1,V2,F1ster(t-tau),Fd,alfa1,alfa2,C1,C2);
+    
+    if strcmp(objectType,'nieliniowy')
+        [V1(1+t), V2(1+t)] = object(t,h,V1,V2,F1ster(t-tau),Fd,alfa1,alfa2,C1,C2);
+    elseif strcmp(objectType,'liniowy')
+        [V1(1+t), V2(t+1)] = objectLin(t,h,V1,V2,F1ster(t-tau),Fd,alfa1,alfa2,C1,C2,h1_lin,h2_lin);
+    end
     t=t+h;
 end
 h2=nthroot(V2/C2, 3);
-Ypp = h2(1998);
-s=(h2(2000:timespan) - Ypp)/delta_u;
+Ypp = h2(step_time-2);
+s=(h2(step_time:timespan) - Ypp)/delta_u;

@@ -79,7 +79,7 @@ yzad=yzad-Ypp;
 for nr=1:liczba_regulatorow
     u{nr}=zeros(1,timespan);
     %odp_skok{nr} = gotowa_odp_skokowa;
-    odp_skok{nr} = fun_odp_skok(centra(nr),2);
+    odp_skok{nr} = fun_odp_skok(centra(nr),2,'nieliniowy',[],max(D)+max(N));
 end
 
 %%%%%%% Macierze M, K, Mp %%%%%%%

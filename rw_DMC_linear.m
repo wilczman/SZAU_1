@@ -82,7 +82,8 @@ for t=tau+2:kk-N %symulacja obiektu i regulatora
     deltaUP(2:D-1)=deltaUP(1:D-2);
     deltaUP(1) = u(t-1)-u(t-2);  
     Y0=Mp*deltaUP+y(t);
-    Yzad=yzad(t+1:t+N);
+    Yzad=yzad(t)*ones(N,1);
+    %Yzad=yzad(t+1:t+N);
     deltaU=K*(Yzad-Y0);	
     delta_u=deltaU(1);
 
