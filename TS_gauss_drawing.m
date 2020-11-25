@@ -5,18 +5,20 @@ liczba_regulatorow = 2;
 figure;
 hold on;
 i=1
-for liczba_regulatorow=2:5
+for liczba_regulatorow=5:5
     h2_pocz=15;
     h2_koniec=45;
     x = (h2_pocz:0.1:h2_koniec)';
     kk=101;
     center=linspace(h2_pocz,h2_koniec,liczba_regulatorow);
-
+    center(3)=28.63;
+    center(4)=center(4)-2;
+    center(5)=center(5)-2;
     
     for nr=1:liczba_regulatorow
         y{nr}=gaussmf(x, [gausy(liczba_regulatorow, h2_pocz, h2_koniec) center(nr)]);
         
-        subplot(4,1,i);
+        %subplot(4,1,i);
         str=sprintf('Liczba modeli = %d', liczba_regulatorow);
         title(str);
         xlabel('h_2')
