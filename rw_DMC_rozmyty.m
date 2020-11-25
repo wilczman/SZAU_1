@@ -5,7 +5,7 @@ load('parameters.mat')
 liczba_regulatorow = 5; %iloœæ rozmytych
 timespan=17000;
 F1ster(1:timespan) = 98.5;
-Fd = 14.2;
+Fd(1:timespan) = 14.2;
 %[h2_pocz, h2_koniec] - zakres w jakim dziala model rozmyty
 h2_pocz=15;
 h2_koniec=45; 
@@ -70,19 +70,30 @@ yzad(round(3*timespan/7):round(4*timespan/7))=h2lin + 2;
 yzad(round(4*timespan/7):round(5*timespan/7))=h2lin + 14;
 yzad(round(5*timespan/7):round(6*timespan/7))=h2lin + 1;
 yzad(round(6*timespan/7):round(7*timespan/7))=h2lin - 6;
+Fd=zeros(1, timespan);
+Fd(round(1*timespan/14):round(2*timespan/7))=10;
+Fd(round(3*timespan/14):round(3*timespan/7))=15;
+Fd(round(5*timespan/14):round(4*timespan/7))=0;
+Fd(round(7*timespan/14):round(5*timespan/7))=5;
+Fd(round(9*timespan/14):round(6*timespan/7))=25;
+Fd(round(12*timespan/14):round(7*timespan/7))=22.5;
+
 
 %%%%%%%   tycie odpowiedzi skokowe  %%%%%%% 
 for nr=1:liczba_regulatorow
     u{nr}=zeros(1,timespan);
     %odp_skok{nr} = gotowa_odp_skokowa;
     odp_skok{nr} = fun_odp_skok(centra(nr),2,'liniowy',max(D)+max(N));
+    odp_skok_fd{nr} = fun_odp_skok_fd(centra(nr),2,'liniowy',max(D)+max(N));
 end
 
 %%%%%%% Macierze M, K, Mp %%%%%%%
 for nr=1:liczba_regulatorow
     Mp{nr}=zeros(N(nr),D(nr)-1);        %macierz ma wymiary Nx(D-1)
+    MZp{nr}=zeros(N(nr),D(nr)-1);
     for i=1:D(nr)-1 %wypelnianie macierzy Mp
        Mp{nr}(1:N(nr), i)=odp_skok{nr}(i+1:N(nr)+i)-odp_skok{nr}(i);
+       MZp{nr}(1:N(nr), i)=odp_skok_fd{nr}(i+1:N(nr)+i)-odp_skok_fd{nr}(i);
     end
     %macierz wspó³czynników odpowiedzi skokowej wymiary(NxNu)
     M=zeros(N(nr), Nu(nr));  
@@ -94,15 +105,17 @@ for nr=1:liczba_regulatorow
 
     I=eye(Nu(nr));  %tworzenie macierzy jednostkowej o wymiarach NuxNu
     K{nr}=inv(M.'*M+lambda(nr)*I)*M.';   %macierz K
+    KZ{nr}=K{nr}(1,:)*MZp{nr};
 
     deltaUP{nr}(1:D(nr)-1,1)=0;
     deltaU{nr}=0;
+    deltaZp{nr}(1:D(nr)-1,1)=0;
 end
 
 %%%%%%%%% Algorytm DMC %%%%%%%%%
 for t=tau+2:timespan-max(N) 
     %symulacja obiektu i regulatora
-    [V1roz(t), V2roz(t)] = object(t-1,h,V1roz,V2roz,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2);
+    [V1roz(t), V2roz(t)] = object(t-1,h,V1roz,V2roz,F1ster(t-1-tau),Fd(t-1-tau),alfa1,alfa2,C1,C2);
     Y(t) = nthroot(V2roz(t)/C2, 3);%(V2roz(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;
     y(t)=Y(t)-Ypp;
     e(t)=yzad(t)-y(t);
@@ -110,12 +123,16 @@ for t=tau+2:timespan-max(N)
     for nr=1:liczba_regulatorow
         deltaUP{nr}(2:D(nr)-1)=deltaUP{nr}(1:D(nr)-2);
         deltaUP{nr}(1) = u_final(t-1)-u_final(t-2);
+        
+        deltaZp{nr}(2:D(nr)-1)=deltaZp{nr}(1:D(nr)-2);
+        deltaZp{nr}(1) = Fd(t-1)-Fd(t-2);
+        
         Y0{nr}=Mp{nr}*deltaUP{nr}+y(t);
         Yzad=yzad(t+1:t+N(nr));
         deltaU{nr}=K{nr}*(Yzad-Y0{nr});	
         delta_u{nr}=deltaU{nr}(1);
 
-        u{nr}(t)=u_final(t-1)+delta_u{nr};
+        u{nr}(t)=u_final(t-1)+delta_u{nr};%+KZ{nr}*deltaZp{nr};
     end
     
     %%%%%%%------ROZMYCIE------%%%%%%%%
@@ -148,7 +165,7 @@ for t=tau+2:timespan-max(N)
     U(t)=u_final(t)+Upp;
     F1ster(t) = U(t);
 end
-wskaznik_jakosci=sum(e.^2);
+wskaznik_jakosci=sum(e.^2)
 
 
 %%%%%%%%prezentacja wyników symulacji%%%%%%%%
@@ -156,13 +173,15 @@ figure;title('Regulator DMC - sterowanie');hold on
 ylabel('F_1_i_n [cm^3/s]');
 xlabel('t [s]');
 xlim([1 timespan-max(N)])
-plot(F1ster(1:timespan-max(N)));hold off
+plot(F1ster(1:timespan-max(N)));plot(Fd,'--');legend('U','Fd')
+hold off
 
 str=sprintf('E=%f', wskaznik_jakosci);
 figure;title({'Rozmyty regulator DMC - wyjœcie obiektu',str});hold on;
 ylabel('h_2 [cm]');
 xlabel('t [s]');
 xlim([1 timespan-max(N)])
-plot(Y(1:timespan-max(N))-Ypp);plot(yzad(1:timespan-max(N)));legend('Y','yzad');hold off;
+plot(Y(1:timespan-max(N))-Ypp);plot(yzad(1:timespan-max(N)));
+legend('Y','yzad');hold off;
 
 save('dmc_rozmyty_y.mat','Y','yzad','F1ster')
