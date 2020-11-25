@@ -1,4 +1,4 @@
-clear all;
+clear all; close all;
 %% Sta³e
 C1 = 0.55;
 C2 = 0.75;
@@ -63,7 +63,9 @@ hold off
 legend
 
 %%%%%---Model rozmyty---%%%%%
-liczba_regulatorow=3;
+TS_model_init
+
+liczba_regulatorow=5;
 warpoczv1=C1*h1lin^2; %warunki pocz¹tkowe
 warpoczv2=C2*h2lin^3;
 V1roz(1:timespan)=warpoczv1;
@@ -73,7 +75,9 @@ h2roz(1:timespan) = h2lin;
 %[h2_pocz, h2_koniec] - zakres w jakim dziala model rozmyty
 h2_pocz=15;
 h2_koniec=45; 
-centra=linspace(h2_pocz,h2_koniec,liczba_regulatorow);
+%centra=linspace(h2_pocz,h2_koniec,liczba_regulatorow);
+TS_model_init
+load('TS_param.mat')
 t=tau+2;
 for i=1:length(delta_u)
     F1ster(200:timespan)=F1zero + delta_u(i);
@@ -88,7 +92,7 @@ for i=1:length(delta_u)
         [V1roz(t), V2roz(t)] = objectLin(t-1,h,V1roz,V2roz,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2,h1lin_mod_lok,h2lin_mod_lok);
         h2roz(t) = (V2roz(t)/C2-h2lin_mod_lok^3)/(3*h2lin_mod_lok^2)+h2lin_mod_lok;
         V2_mod_lok(nr)=V2roz(t);
-        w(nr) = gaussmf(h2roz(t), [gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
+        w(nr) = gaussmf(h2roz(t),[sigma(nr) centra(nr)]); %[gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
     end    
     V2roz_suma=0;
     for nr=1:liczba_regulatorow 
@@ -105,18 +109,22 @@ for i=1:length(delta_u)
     h2roz_out(:,i)=nthroot(V2roz/C2, 3);
     t=tau+2;
 end
+h2roz_out=h2roz_out(1:timespan-1,:);
+h2_out=h2_out(1:timespan-1,:);
+e=sum((h2roz_out-h2_out).^2);
+e=sum(e)
 
 %%%%%%%%%%prezentacja wynikow%%%%%%%%%%%%%%%
-figure
-title('Wyjœcie modelu liniowego')
-xlabel('t [s]')
-ylabel('Wysokoœæ s³upa cieczy h_2 [cm^3/s]')
-hold on
-for i=1:length(delta_u)
-    plot(h2lin_out(:,i),'DisplayName',sprintf('\\Delta u=%d', delta_u(i)));
-end
-hold off
-legend
+% figure
+% title('Wyjœcie modelu liniowego')
+% xlabel('t [s]')
+% ylabel('Wysokoœæ s³upa cieczy h_2 [cm^3/s]')
+% hold on
+% for i=1:length(delta_u)
+%     plot(h2lin_out(:,i),'DisplayName',sprintf('\\Delta u=%d', delta_u(i)));
+% end
+% hold off
+% legend
 
 
 figure
@@ -144,22 +152,45 @@ legend
 
 
 %%%%%%zbiorczy wykres
+% 
+% figure
+% str=sprintf('Liczba modeli lokalnych w modelu rozmytym=%d',liczba_regulatorow);
+% title({'Wyjœcie modeli',str})
+% xlabel('t [s]')
+% ylabel('Wysokoœæ s³upa cieczy h_2 [cm^3/s]')
+% hold on
+% for i=1:length(delta_u)
+%     if i==1
+%         p_nlin=plot(h2_out(:,i),'DisplayName','Model nieliniowy','Color', [0 0.4470 0.7410]);
+%         p_lin=plot(h2lin_out(:,i),'DisplayName','Model liniowy','Color', [0.4660 0.6740 0.1880]);
+%         p_roz=plot(h2roz_out(:,i),'DisplayName','Model rozmyty','Color', [0.8500 0.3250 0.0980]);
+%     else
+%         plot(h2_out(:,i),'Color', [0 0.4470 0.7410]);
+%         plot(h2lin_out(:,i),'Color', [0.4660 0.6740 0.1880]);
+%         plot(h2roz_out(:,i),'Color', [0.8500 0.3250 0.0980]); 
+%     end
+% end
+% 
+% legend([p_nlin p_lin p_roz], {'Model nieliniowy','Model liniowy', 'Model rozmyty'})
+% hold off
 
 figure
-title('Wyjœcie modeli')
+str=sprintf('Liczba modeli lokalnych w modelu rozmytym=%d',liczba_regulatorow);
+title({'Wyjœcie modeli',str})
 xlabel('t [s]')
 ylabel('Wysokoœæ s³upa cieczy h_2 [cm^3/s]')
 hold on
 for i=1:length(delta_u)
     if i==1
         p_nlin=plot(h2_out(:,i),'DisplayName','Model nieliniowy','Color', [0 0.4470 0.7410]);
-        p_lin=plot(h2lin_out(:,i),'DisplayName','Model liniowy','Color', [0.8500 0.3250 0.0980]);
-        p_roz=plot(h2roz_out(:,i),'DisplayName','Model rozmyty','Color', [0.4660 0.6740 0.1880]);
+        %p_lin=plot(h2lin_out(:,i),'DisplayName','Model liniowy','Color', [0.8500 0.3250 0.0980]);
+        p_roz=plot(h2roz_out(:,i),'--','DisplayName','Model rozmyty','Color', [0.8500 0.3250 0.0980]);
     else
         plot(h2_out(:,i),'Color', [0 0.4470 0.7410]);
-        plot(h2lin_out(:,i),'Color', [0.8500 0.3250 0.0980]);
-        plot(h2roz_out(:,i),'Color', [0.4660 0.6740 0.1880]); 
+        %plot(h2lin_out(:,i),'Color', [0.8500 0.3250 0.0980]);
+        plot(h2roz_out(:,i),'--','Color', [0.8500 0.3250 0.0980]); 
     end
 end
-legend([p_nlin p_lin p_roz], {'Model nieliniowy','Model liniowy', 'Model rozmyty'})
+
+legend([p_nlin p_roz], {'Model nieliniowy', 'Model rozmyty'})
 hold off
