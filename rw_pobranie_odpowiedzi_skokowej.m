@@ -38,7 +38,7 @@ while t<timespan %wykonuj na przedziale [0,15]
     [V1lin(1+t), V2lin(1+t)] = objectLin(t,h,V1lin,V2lin,F1ster(t-tau),Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
     t=t+h;
 end
-h2=nthroot(V2lin/C2, 3);
+h2=(V2lin/C2-h2lin^3)/(3*h2lin^2)+h2lin;% nthroot(V2lin/C2, 3);
 
 %% Pobranie odpowiedzi skokowej z obiektu liniowego
 Ypp = h2(5998);
@@ -57,6 +57,8 @@ xlabel('czas symulacji [s]');
 
 figure
 plot(s);
-title('OdpowiedŸ skokowa')
+ylabel('h_2 [cm]');
+xlabel('t [s]');
+title('OdpowiedŸ skokowa obiektu liniowego')
 
 save('rw_odp_skok','s')

@@ -97,3 +97,23 @@ for i=1:length(delta_u)
 end
 hold off
 legend
+
+%%%%%%zbiorczy wykres
+
+figure
+title('Wyjœcie modeli')
+xlabel('t [s]')
+ylabel('Wysokoœæ s³upa cieczy h_2 [cm^3/s]')
+hold on
+for i=1:length(delta_u)
+    if i==1
+        p_nlin=plot(h2_out(:,i),'DisplayName','Model nieliniowy','Color', [0 0.4470 0.7410]);
+        p_lin=plot(h2lin_out(:,i),'--','DisplayName','Model liniowy','Color', [0.8500 0.3250 0.0980]);
+       
+    else
+        plot(h2_out(:,i),'Color', [0 0.4470 0.7410]);
+        plot(h2lin_out(:,i),'--','Color', [0.8500 0.3250 0.0980]);
+    end
+end
+legend([p_nlin p_lin], {'Model nieliniowy','Model liniowy'})
+hold off

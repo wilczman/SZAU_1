@@ -2,8 +2,8 @@ clear all
 
 %%%%%%%    inicjalizacja    %%%%%%
 load('parameters.mat')
-liczba_regulatorow = 3; %iloœæ rozmytych
-timespan=3000;
+liczba_regulatorow = 5; %iloœæ rozmytych
+timespan=17000;
 F1ster(1:timespan) = 98.5;
 Fd = 14.2;
 %[h2_pocz, h2_koniec] - zakres w jakim dziala model rozmyty
@@ -18,35 +18,24 @@ V1roz(1:timespan)=warpoczv1;
 V2roz(1:timespan)=warpoczv2;
 
 %parametry DMC
-D=5000; N=200; Nu=50; lambda = 1;
+D=5000; N=200; Nu=50; lambda = 5;
 params=[D N Nu];
 params_DMC{1} = params;
 params_DMC{2} = [ params;  params];
 params_DMC{3} = [ params; params; params ];
 params_DMC{4} = [ params; params; params; params ] ;
 params_DMC{5} = [ params; params ;params;params; params ];
-
+lambda=[lambda,lambda,lambda,lambda,lambda]; %parametr lambda np. 1
+ 
 %%%%%%%%Punkt Pracy%%%%%%%%
 Upp=98.5;
 Ypp=0%h2lin;
 
 %%%%%%%%%Ograniczenia%%%%%%%
-%u_min=-1-Upp;
-%u_max=1-Upp;
-delta_u_max=10;
+u_min=0-Upp;
+u_max=180-Upp;
+delta_u_max=2;
 delta_u_min=-delta_u_max;
-
-%%%%%%%%%-----Parametry DMC------%%%%%%%
- lambda=[5,5,5,5,5]; %parametr lambda np. 1
-% D=[50,50,50,50,50]; %horyzont dynamiki (D)
-% N=[50,50,50,50,50];%horyzont predykcji (N)
-% Nu=[30,30,30,30,30]; %horyzont sterowania (Nu)(ilosc przyszlych przyrostow wartosci sterowania)
-
-%load('optymalne_parametry_DMC.mat');
-%parametry dobrane przez funkcjê fmincon()
-%D=150; N=nastawy_DMC_fmincon(1); Nu=nastawy_DMC_fmincon(2); lambda=nastawy_DMC_fmincon(3);
-%D=150; N=35; Nu=5; lambda=1 %NAJLEPSZE EKSPERYMENTALNE PARAMETRY SWIATA
-%D=200; N=50; Nu=10; % robocze parametry
 
 
 %%%%%%deklaracja wektorów sygna³ów oraz b³êdów%%%%%%
@@ -68,26 +57,25 @@ e=zeros(1, timespan);
 u_final=zeros(1,timespan);
 
 
-yzad=zeros(1, timespan)+28.63;
-yzad(round(1*timespan/6):round(1*timespan/3))=30;
-yzad(round(1*timespan/3):round(2*timespan/3))=26;
-yzad(round(2*timespan/3):round(3*timespan/3))=27;
-yzad=yzad-Ypp;
-
 % yzad=zeros(1, timespan)+28.63;
-% 
-% yzad(round(1*timespan/7):round(2*timespan/7))=26;
-% yzad(round(2*timespan/7):round(3*timespan/7))=29;
-% yzad(round(3*timespan/7):round(4*timespan/7))=30;
-% yzad(round(4*timespan/7):round(5*timespan/7))=27;
-% yzad(round(5*timespan/7):round(7*timespan/7))=25;
+% yzad(round(1*timespan/6):round(1*timespan/3))=30;
+% yzad(round(1*timespan/3):round(2*timespan/3))=26;
+% yzad(round(2*timespan/3):round(3*timespan/3))=27;
 % yzad=yzad-Ypp;
+
+yzad=zeros(1, timespan)+28.63;
+yzad(round(1*timespan/7):round(2*timespan/7))=h2lin - 9;
+yzad(round(2*timespan/7):round(3*timespan/7))=h2lin - 4;
+yzad(round(3*timespan/7):round(4*timespan/7))=h2lin + 2;
+yzad(round(4*timespan/7):round(5*timespan/7))=h2lin + 14;
+yzad(round(5*timespan/7):round(6*timespan/7))=h2lin + 1;
+yzad(round(6*timespan/7):round(7*timespan/7))=h2lin - 6;
 
 %%%%%%%   tycie odpowiedzi skokowe  %%%%%%% 
 for nr=1:liczba_regulatorow
     u{nr}=zeros(1,timespan);
     %odp_skok{nr} = gotowa_odp_skokowa;
-    odp_skok{nr} = fun_odp_skok(centra(nr),2,'nieliniowy',max(D)+max(N));
+    odp_skok{nr} = fun_odp_skok(centra(nr),2,'liniowy',max(D)+max(N));
 end
 
 %%%%%%% Macierze M, K, Mp %%%%%%%
@@ -118,18 +106,7 @@ for t=tau+2:timespan-max(N)
     Y(t) = nthroot(V2roz(t)/C2, 3);%(V2roz(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;
     y(t)=Y(t)-Ypp;
     e(t)=yzad(t)-y(t);
-    
-%     for nr = 1:liczba_regulatorow
-%         h2lin_mod_lok = centra(nr);
-%         h1lin_mod_lok = h2lin_mod_lok;
-%         [V1roz(t), V2roz(t)] = objectLin(t-1,h,V1roz,V2roz,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2,h1lin_mod_lok,h2lin_mod_lok);
-%         h2roz(t) = (V2roz(t)/C2-h2lin_mod_lok^3)/(3*h2lin_mod_lok^2)+h2lin_mod_lok;
-%         %h2_mod_lok(nr)=h2roz(t);
-%         V2_mod_lok(nr)=V2roz(t);
-%         %V1_mod_lok(nr)=V1roz(t);
-%         w(nr) = gaussmf(h2roz(t), [gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
-%     end
-    
+        
     for nr=1:liczba_regulatorow
         deltaUP{nr}(2:D(nr)-1)=deltaUP{nr}(1:D(nr)-2);
         deltaUP{nr}(1) = u_final(t-1)-u_final(t-2);
@@ -160,32 +137,32 @@ for t=tau+2:timespan-max(N)
     end
     
     u_final(t)=u_final(t-1)+delta;
+    
     %ograniczenie sygna³u steruj¹cego
-%     if u_final(t)>u_max
-%         u_final(t)=u_max;
-%     elseif u_final(t)<u_min
-%         u_final(t)=u_min;
-%     end
-     U(t)=u_final(t)+Upp;
-     F1ster(t) = U(t);
+    if u_final(t)>u_max
+        u_final(t)=u_max;
+    elseif u_final(t)<u_min
+        u_final(t)=u_min;
+    end
+    
+    U(t)=u_final(t)+Upp;
+    F1ster(t) = U(t);
 end
 wskaznik_jakosci=sum(e.^2);
 
-% for nr=1:liczba_regulatorow
-%     wskaznik_jakosci=sum(e.^2);
-%     yzad=yzad(1:timespan-N(nr))+Ypp;
-%     Y=Y(1:timespan-N(nr));
-%     U=U(1:timespan-N(nr));
-% end
 
-    %%%%%%%%prezentacja wyników symulacji%%%%%%%%
-figure;
-stairs(U);hold on; xlim([0, timespan-N(nr)]);
-title('Sygna³ sterowania DMC'); xlabel('t');ylabel('wartoœæ sygna³u');
+%%%%%%%%prezentacja wyników symulacji%%%%%%%%
+figure;title('Regulator DMC - sterowanie');hold on
+ylabel('F_1_i_n [cm^3/s]');
+xlabel('t [s]');
+xlim([1 timespan-max(N)])
+plot(F1ster(1:timespan-max(N)));hold off
 
-figure;
-stairs(Y); hold on; 
-stairs(yzad,':'); xlim([0, timespan-N(nr)]); 
-title('Wyjœcie regulatora DMC'); xlabel('t'); ylabel('wartoœæ sygna³u');
-legend('wyjœcie y(t)','wartoœæ zadana');
+str=sprintf('E=%f', wskaznik_jakosci);
+figure;title({'Rozmyty regulator DMC - wyjœcie obiektu',str});hold on;
+ylabel('h_2 [cm]');
+xlabel('t [s]');
+xlim([1 timespan-max(N)])
+plot(Y(1:timespan-max(N))-Ypp);plot(yzad(1:timespan-max(N)));legend('Y','yzad');hold off;
 
+save('dmc_rozmyty_y.mat','Y','yzad','F1ster')

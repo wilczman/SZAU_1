@@ -9,13 +9,8 @@ timespan = step_time+D;
 
 
 h1_0=h2_0;
-%if strcmp(objectType,'nieliniowy')
-    F2=alfa1*h1_0^(1/2);
-%elseif strcmp(objectType,'liniowy')
-%     h1_lin=h2_lin;
-%     F2=alfa1*(h1_lin^(1/2)+1/(2*h1_lin^(1/2))*(h1_0-h1_lin));
-%     %F2=alfa1*h1_0^(1/2);
-% end
+F2=alfa1*h1_0^(1/2);
+
 
 F1ster(1:step_time-2) = F2-Fd; %dop³yw wody do zbiornika
 F1ster(step_time-1:timespan) = F2-Fd + delta_u;
