@@ -4,7 +4,7 @@ C1 = 0.55;
 C2 = 0.75;
 alfa1 = 21;
 alfa2 = 21;
-timespan = 3050;
+timespan = 13000;
 tau = 50;
 % C1 = 0.5;
 % C2 = 0.4;
@@ -29,6 +29,9 @@ warpoczv2=0;
 V1(1:timespan)=warpoczv1;
 V2(1:timespan)=warpoczv2;
 while t<timespan %wykonuj na przedziale [0,15]
+    if t == 4001
+        Fd = 30;
+    end
     k11=dv1dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2); %obliczanie wspó³czynników k dla obu zmiennych 
     k12=dv2dt(V1(t),V2(t),F1,Fd,alfa1,alfa2,C1,C2);
     k21=dv1dt(V1(t)+0.5*h*k11,V2(t)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2);
@@ -54,3 +57,7 @@ plot(nthroot(V1/C1, 2));
 legend('h2','h1');
 ylabel('wysokoœæ s³upa wody [cm]');
 xlabel('czas symulacji [s]');
+h2 = nthroot(V2/C2, 3);
+odp_skok_fd = (h2(4001:13000)-h2(4000) )/15.8;
+figure;
+plot(odp_skok_fd)
