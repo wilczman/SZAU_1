@@ -13,9 +13,9 @@ tau = 50;
 
 %% I
 F1in(1:timespan) = 0; %dop³yw wody do zbiornika - wielkoœæ steruj¹ca
+Fd(1:timespan) = 14.2; %14.2; %dop³yw zak³ócaj¹cy
 F1ster(1:2000) = 0; %dop³yw wody do zbiornika 
 F1ster(2000:timespan) = 0;
-Fd = 14.2;%14.2; %dop³yw zak³ócaj¹cy
 h=1;  %ustawienie kroku
 t=tau+1;
 % starttime=1; %pocz¹tek przedzia³u%
@@ -27,6 +27,7 @@ V2lin(1:timespan)=warpoczv2;
 %% DMC
 % load('odp_skokH28.mat')
 load('final_odp_skok.mat')
+load('odp_skok_fd1.mat')
 D=300; N=200; Nu=50;lambda = 1;delta_u_max = 200;u_max = 200; u_min = 0;
 Upp=0;
 Ypp=0;
@@ -48,8 +49,10 @@ e = yzad-Y;
 % yzad=yzad-Ypp;
 
 Mp=zeros(N,D-1);        %macierz ma wymiary Nx(D-1)
+MZp=zeros(N,D-1);        %macierz ma wymiary Nx(D-1)
 for i=1:D-1 %wypelnianie macierzy Mp
    Mp(1:N, i)=final_odp_skok(i+1:N+i)-final_odp_skok(i);
+   MZp(1:N, i)=odp_skok_fd(i+1:N+i)-odp_skok_fd(i);
 end
 %macierz wspó³czynników odpowiedzi skokowej wymiary(NxNu)
 M=zeros(N, Nu);  
@@ -61,23 +64,25 @@ end
 
 I=eye(Nu);              %tworzenie macierzy jednostkowej o wymiarach NuxNu
 K=inv(M.'*M+lambda*I)*M.';   %macierz K
+KZ=K*MZp;
 
 deltaUP(1:D-1,1)=0;
 deltaU=0;
+deltaZP(1:D-1,1)=0;
 
 %%%%%%%%% Algorytm DMC %%%%%%%%%
 for t=tau+1:kk-N %symulacja obiektu i regulatora
     
     %###########
     F1 = F1ster(t-tau);
-    k11=lin_dv1dt(V1lin(t-1),V2lin(t-1),F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin); %obliczanie wspó³czynników k dla obu zmiennych 
-    k12=lin_dv2dt(V1lin(t-1),V2lin(t-1),F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k21=lin_dv1dt(V1lin(t-1)+0.5*h*k11,V2lin(t-1)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k22=lin_dv2dt(V1lin(t-1)+0.5*h*k11,V2lin(t-1)+0.5*h*k12,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k31=lin_dv1dt(V1lin(t-1)+0.5*h*k21,V2lin(t-1)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k32=lin_dv2dt(V1lin(t-1)+0.5*h*k21,V2lin(t-1)+0.5*h*k22,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k41=lin_dv1dt(V1lin(t-1)+h*k31,V2lin(t-1)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
-    k42=lin_dv2dt(V1lin(t-1)+h*k31,V2lin(t-1)+h*k32,F1,Fd,alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k11=lin_dv1dt(V1lin(t-1),V2lin(t-1),F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin); %obliczanie wspó³czynników k dla obu zmiennych 
+    k12=lin_dv2dt(V1lin(t-1),V2lin(t-1),F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k21=lin_dv1dt(V1lin(t-1)+0.5*h*k11,V2lin(t-1)+0.5*h*k12,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k22=lin_dv2dt(V1lin(t-1)+0.5*h*k11,V2lin(t-1)+0.5*h*k12,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k31=lin_dv1dt(V1lin(t-1)+0.5*h*k21,V2lin(t-1)+0.5*h*k22,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k32=lin_dv2dt(V1lin(t-1)+0.5*h*k21,V2lin(t-1)+0.5*h*k22,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k41=lin_dv1dt(V1lin(t-1)+h*k31,V2lin(t-1)+h*k32,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
+    k42=lin_dv2dt(V1lin(t-1)+h*k31,V2lin(t-1)+h*k32,F1,Fd(t),alfa1,alfa2,C1,C2,h1lin,h2lin);
     V1lin(t)=V1lin(t-1)+1/6*h*(k11+2*k21+2*k31+k41);
     if V1lin(t)<0
         V1lin(t) = 0;
@@ -93,6 +98,10 @@ for t=tau+1:kk-N %symulacja obiektu i regulatora
     e(t)=yzad(t)-y(t);
     deltaUP(2:D-1)=deltaUP(1:D-2);
     deltaUP(1) = u(t-1)-u(t-2);  
+    
+    deltaZP(2:D-1)=deltaZP(1:D-2);
+    deltaZP(1) =Fd(t-1)-Fd(t-2);  
+    
     Y0=Mp*deltaUP+y(t);
     Yzad=yzad(t+1:t+N);
     deltaU=K*(Yzad-Y0);	
@@ -105,7 +114,7 @@ for t=tau+1:kk-N %symulacja obiektu i regulatora
          delta_u=-delta_u_max;
     end
 
-    u(t)=u(t-1)+delta_u;
+    u(t)=u(t-1)+delta_u ;% + KZ*deltaZP;
     %ograniczenie sygna³u steruj¹cego
     if u(t)>u_max
         u(t)=u_max;

@@ -25,6 +25,7 @@ V2(1:timespan)=warpoczv2;
 %% DMC
 
 load('rw_odp_skok.mat','s')
+load('odp_skok_fd.mat')
 final_odp_skok=s;
 D=5000; N=200; Nu=50;lambda = 5;
 
@@ -74,11 +75,9 @@ K=inv(M.'*M+lambda*I)*M.';   %macierz K
 %%%%%%%%% Algorytm DMC %%%%%%%%%
 for t=tau+2:timespan-N %symulacja obiektu i regulatora
     
-    %###########
-    %F1 = F1ster(t-tau);
+    
     [V1(t), V2(t)] = object(t-1,h,V1,V2,F1ster(t-1-tau),Fd,alfa1,alfa2,C1,C2);
-    %############
-    Y(t) = nthroot(V2(t)/C2, 3);%(V2(t)/C2-h2lin^3)/(3*h2lin^2)+h2lin;%
+    Y(t) = nthroot(V2(t)/C2, 3);
     
     y(t)=Y(t)-Ypp;
     e(t)=yzad(t)-y(t);
@@ -86,7 +85,6 @@ for t=tau+2:timespan-N %symulacja obiektu i regulatora
     deltaUP(1) = u(t-1)-u(t-2);
     Y0=Mp*deltaUP+y(t);
     Yzad=yzad(t)*ones(N,1);
-    %Yzad=yzad(t+1:t+N);
     deltaU=K*(Yzad-Y0);
     delta_u=deltaU(1);
     
@@ -96,8 +94,8 @@ for t=tau+2:timespan-N %symulacja obiektu i regulatora
     elseif delta_u<(-delta_u_max)
         delta_u=-delta_u_max;
     end
-    
     u(t)=u(t-1)+delta_u;
+    
     %ograniczenie sygna³u steruj¹cego
     if u(t)>u_max
         u(t)=u_max;
@@ -121,3 +119,5 @@ ylabel('h_2 [cm]');
 xlabel('t [s]');
 xlim([1 timespan-N])
 plot(Y(1:timespan-N)-Ypp);plot(yzad(1:timespan-N));legend('Y','yzad');hold off;
+
+save('dmc_lin_y.mat','Y','yzad','F1ster')
