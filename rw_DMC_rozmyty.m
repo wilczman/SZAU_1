@@ -3,7 +3,7 @@ clear all
 %%%%%%%    inicjalizacja    %%%%%%
 load('parameters.mat')
 liczba_regulatorow = 3; %iloœæ rozmytych
-timespan=10000;
+timespan=3000;
 F1ster(1:timespan) = 98.5;
 Fd = 14.2;
 %[h2_pocz, h2_koniec] - zakres w jakim dziala model rozmyty
@@ -33,7 +33,8 @@ Ypp=0%h2lin;
 %%%%%%%%%Ograniczenia%%%%%%%
 %u_min=-1-Upp;
 %u_max=1-Upp;
-
+delta_u_max=10;
+delta_u_min=-delta_u_max;
 
 %%%%%%%%%-----Parametry DMC------%%%%%%%
  lambda=[5,5,5,5,5]; %parametr lambda np. 1
@@ -66,20 +67,27 @@ U(:)=Upp;
 e=zeros(1, timespan);
 u_final=zeros(1,timespan);
 
-yzad=zeros(1, timespan)+28.63;
 
-yzad(round(1*timespan/7):round(2*timespan/7))=26;
-yzad(round(2*timespan/7):round(3*timespan/7))=29;
-yzad(round(3*timespan/7):round(4*timespan/7))=30;
-yzad(round(4*timespan/7):round(5*timespan/7))=27;
-yzad(round(5*timespan/7):round(7*timespan/7))=25;
+yzad=zeros(1, timespan)+28.63;
+yzad(round(1*timespan/6):round(1*timespan/3))=30;
+yzad(round(1*timespan/3):round(2*timespan/3))=26;
+yzad(round(2*timespan/3):round(3*timespan/3))=27;
 yzad=yzad-Ypp;
+
+% yzad=zeros(1, timespan)+28.63;
+% 
+% yzad(round(1*timespan/7):round(2*timespan/7))=26;
+% yzad(round(2*timespan/7):round(3*timespan/7))=29;
+% yzad(round(3*timespan/7):round(4*timespan/7))=30;
+% yzad(round(4*timespan/7):round(5*timespan/7))=27;
+% yzad(round(5*timespan/7):round(7*timespan/7))=25;
+% yzad=yzad-Ypp;
 
 %%%%%%%   tycie odpowiedzi skokowe  %%%%%%% 
 for nr=1:liczba_regulatorow
     u{nr}=zeros(1,timespan);
     %odp_skok{nr} = gotowa_odp_skokowa;
-    odp_skok{nr} = fun_odp_skok(centra(nr),2,'nieliniowy',[],max(D)+max(N));
+    odp_skok{nr} = fun_odp_skok(centra(nr),2,'nieliniowy',max(D)+max(N));
 end
 
 %%%%%%% Macierze M, K, Mp %%%%%%%
@@ -144,6 +152,14 @@ for t=tau+2:timespan-max(N)
     end
     u_final(t) = u_final(t) / sum(w);
     
+    delta=u_final(t)-u_final(t-1);
+    if delta>delta_u_max
+         delta=delta_u_max; 
+    elseif delta<(-delta_u_max)
+         delta=-delta_u_max;
+    end
+    
+    u_final(t)=u_final(t-1)+delta;
     %ograniczenie sygna³u steruj¹cego
 %     if u_final(t)>u_max
 %         u_final(t)=u_max;
