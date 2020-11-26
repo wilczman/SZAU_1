@@ -11,9 +11,7 @@ for liczba_regulatorow=5:5
     x = (h2_pocz:0.1:h2_koniec)';
     kk=101;
     center=linspace(h2_pocz,h2_koniec,liczba_regulatorow);
-    center(3)=28.63;
-    center(4)=center(4)-2;
-    center(5)=center(5)-2;
+    
     
     for nr=1:liczba_regulatorow
         y{nr}=gaussmf(x, [gausy(liczba_regulatorow, h2_pocz, h2_koniec) center(nr)]);

@@ -2,6 +2,7 @@ clear all
 
 %%%%%%%    inicjalizacja    %%%%%%
 load('parameters.mat')
+load('TS_param.mat')
 liczba_regulatorow = 5; %iloœæ rozmytych
 timespan=3000;
 F1ster(1:timespan) = 98.5;
@@ -18,7 +19,7 @@ V1roz(1:timespan)=warpoczv1;
 V2roz(1:timespan)=warpoczv2;
 
 %parametry DMC
-D=5000; N=200; Nu=50; lambda = 1;
+D=5000; N=200; Nu=50; lambda = 5;
 
 %%%%%%%%Punkt Pracy%%%%%%%%
 Upp=98.5;
@@ -28,7 +29,7 @@ Ypp=0;%h2lin;
 u_min=0-Upp;
 u_max=160-Upp;
 
-delta_u_max=10;
+delta_u_max=2;
 delta_u_min=-delta_u_max;
 lb=ones(Nu,1)*delta_u_min;
 ub=ones(Nu,1)*delta_u_max;
@@ -52,6 +53,7 @@ e=zeros(1, timespan);
 % yzad(round(3*timespan/6):round(4*timespan/6))=30;
 % yzad(round(4*timespan/6):round(5*timespan/6))=27;
 % yzad(round(5*timespan/6):round(6*timespan/6))=25;
+
 %do krotszej symulacji
 yzad=zeros(1, timespan)+28.63;
 yzad(round(1*timespan/6):round(1*timespan/3))=30;
@@ -75,7 +77,7 @@ for t=tau+2:timespan-max(N)
     
     %%%%%%%   liczenie wag  %%%%%%% 
     for nr=1:liczba_regulatorow
-        w(nr) = gaussmf(y(t), [gausy(liczba_regulatorow, h2_pocz, h2_koniec) centra(nr)]);
+        w(nr) = gaussmf(y(t), [sigma(nr) centra(nr)]);
     end
     w_fala=w/sum(w);
     
@@ -101,9 +103,6 @@ for t=tau+2:timespan-max(N)
     deltaUP(1) = u(t-1)-u(t-2);  
     Y0=Mp*deltaUP+y(t);
     Yzad=yzad(t)*ones(N,1); %yzad(t+1:t+N)';
-    %ostatnie sterowanie zapisywane, aby funkcja od nieliniowych ograniczen
-    %mogla go pobrac
-     
     
     
     fun=@(delta_U) (Yzad-Y0-M*delta_U)'*(Yzad-Y0-M*delta_U)+lambda*delta_U'*delta_U;
@@ -122,32 +121,31 @@ for t=tau+2:timespan-max(N)
 
     u(t)=u(t-1)+delta_u;
     %ograniczenie sygna³u steruj¹cego
-%     if u(t)>u_max
-%         u(t)=u_max;
-%     elseif u(t)<u_min
-%         u(t)=u_min;
-%     end
+    if u(t)>u_max
+        u(t)=u_max;
+    elseif u(t)<u_min
+        u(t)=u_min;
+    end
     
     U(t)=u(t)+Upp;
     F1ster(t) = U(t);   
 end
 wskaznik_jakosci=sum(e.^2);
 
-% for nr=1:liczba_regulatorow
-%     wskaznik_jakosci=sum(e.^2);
-%     yzad=yzad(1:timespan-N(nr))+Ypp;
-%     Y=Y(1:timespan-N(nr));
-%     U=U(1:timespan-N(nr));
-% end
+
 
     %%%%%%%%prezentacja wyników symulacji%%%%%%%%
-figure;
-stairs(U);hold on; xlim([0, timespan-N]);
-title('Sygna³ sterowania DMC'); xlabel('t');ylabel('wartoœæ sygna³u');
+figure;title('Regulator FDMC-SL - sterowanie');hold on
+ylabel('F_1_i_n [cm^3/s]');
+xlabel('t [s]');
+xlim([1 timespan-max(N)])
+plot(F1ster(1:timespan-max(N)));hold off
 
-figure;
-stairs(Y); hold on; 
-stairs(yzad,':'); xlim([0, timespan-N]); 
-title('Wyjœcie regulatora DMC'); xlabel('t'); ylabel('wartoœæ sygna³u');
-legend('wyjœcie y(t)','wartoœæ zadana');
+str=sprintf('E=%f', wskaznik_jakosci);
+figure;title({'Regulator FDMC-SL - wyjœcie obiektu',str});hold on;
+ylabel('h_2 [cm]');
+xlabel('t [s]');
+xlim([1 timespan-max(N)])
+plot(Y(1:timespan-max(N))-Ypp);plot(yzad(1:timespan-max(N)));legend('Y','yzad');hold off;
 
+save('fdmc_sl_y.mat','Y','yzad','F1ster')
